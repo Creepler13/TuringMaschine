@@ -1,6 +1,7 @@
 package logic;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 public class CommandManager {
 
@@ -19,7 +20,7 @@ public class CommandManager {
 
 	public void remove(String state, String data) {
 		if (get(state, data) != null) {
-		Commands.get(state).remove(data);
+			Commands.get(state).remove(data);
 		}
 	}
 
@@ -34,4 +35,18 @@ public class CommandManager {
 		}
 		return null;
 	}
+
+	public String toString() {
+		String out = "";
+		for (Entry<String, HashMap<String, Command>> e : Commands.entrySet()) {
+			for (Entry<String, Command> es : e.getValue().entrySet()) {
+				Command temp = es.getValue();
+				out = out + "\n" + e.getKey() + "," + es.getKey() + "\n" + temp.nextState + "," + temp.print + ","
+						+ temp.dir;
+			}
+		}
+		out = out.replaceFirst("\n", "");
+		return out;
+	}
+
 }

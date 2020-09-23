@@ -3,7 +3,12 @@ package InterFace;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 
 import javax.swing.DefaultComboBoxModel;
@@ -55,6 +60,10 @@ public class Frame extends JFrame {
 	private JTextField startInput;
 	private JComboBox<String> countSet;
 	private JButton countSymbolBtn;
+	private JButton saveBtn;
+	private JTextField saveInput;
+	private JButton loadBtn;
+	private JComboBox<String> loadSet;
 
 	/**
 	 * Launch the application.
@@ -96,7 +105,7 @@ public class Frame extends JFrame {
 
 				} else {
 					turing.CM.remove((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem());
-					
+
 					turing.CM.add(new Command((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem(),
 							(String) nextStateSet.getSelectedItem(), (String) printSet.getSelectedItem(),
 							(String) DirectSet.getSelectedItem()));
@@ -151,13 +160,13 @@ public class Frame extends JFrame {
 				DefaultMutableTreeNode node_1;
 				node_1 = new DefaultMutableTreeNode("Symbols");
 				node_1.add(new DefaultMutableTreeNode(" "));
-				add(node_1);
+				this.add(node_1);
 				node_1 = new DefaultMutableTreeNode("States");
 				node_1.add(new DefaultMutableTreeNode("A"));
 				node_1.add(new DefaultMutableTreeNode("END"));
-				add(node_1);
+				this.add(node_1);
 				node_1 = new DefaultMutableTreeNode("Commands");
-				add(node_1);
+				this.add(node_1);
 			}
 		}));
 		tree.setShowsRootHandles(true);
@@ -218,7 +227,7 @@ public class Frame extends JFrame {
 				turing.setStartEnd((String) startSet.getSelectedItem(), (String) endSet.getSelectedItem());
 				output.setText("");
 				while (!turing.next()) {
-					print(turing.band.toString());
+					printTuringOut(turing.band.toString());
 				}
 				print("End: " + turing.band.toString());
 			}
@@ -233,13 +242,18 @@ public class Frame extends JFrame {
 		countSymbolBtn = new JButton("Count");
 		countSymbolBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String s = (String) countSet.getSelectedItem();
-				int temp = 0;
-				for (String iterable_element : turing.band.Band) {
-					if (iterable_element.equals(s))
-						temp++;
+				try {
+					String s = (String) countSet.getSelectedItem();
+					int temp = 0;
+
+					for (String iterable_element : turing.band.Band) {
+						if (iterable_element.equals(s))
+							temp++;
+					}
+					print("Count of " + s + ": " + temp);
+				} catch (NullPointerException ex) {
+
 				}
-				print("Count of " + s + ": " + temp);
 			}
 		});
 
@@ -248,10 +262,25 @@ public class Frame extends JFrame {
 		output = new JTextArea();
 		output.setEditable(false);
 
+		saveBtn = new JButton("Save");
+		saveBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Save();
+			}
+		});
+
+		saveInput = new JTextField();
+		saveInput.setToolTipText("State");
+		saveInput.setColumns(10);
+
+		loadBtn = new JButton("Load");
+
+		loadSet = new JComboBox<String>();
+
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
 				.createSequentialGroup()
-				.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
 						.addGroup(gl_contentPane.createSequentialGroup().addGap(77).addGroup(gl_contentPane
 								.createParallelGroup(Alignment.TRAILING, false)
 								.addComponent(
@@ -266,7 +295,17 @@ public class Frame extends JFrame {
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
 										.addComponent(countSymbolBtn, Alignment.LEADING, GroupLayout.DEFAULT_SIZE,
 												GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-										.addComponent(countSet, Alignment.LEADING, 0, 119, Short.MAX_VALUE)))
+										.addComponent(countSet, Alignment.LEADING, 0, 119, Short.MAX_VALUE))
+								.addPreferredGap(ComponentPlacement.RELATED, 84, Short.MAX_VALUE)
+								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
+										.addComponent(loadBtn, GroupLayout.PREFERRED_SIZE, 119,
+												GroupLayout.PREFERRED_SIZE)
+										.addComponent(loadSet, GroupLayout.PREFERRED_SIZE, 119,
+												GroupLayout.PREFERRED_SIZE))
+								.addGap(18)
+								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
+										.addComponent(saveInput)
+										.addComponent(saveBtn, GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)))
 						.addGroup(gl_contentPane.createSequentialGroup().addContainerGap()
 								.addComponent(output, GroupLayout.PREFERRED_SIZE, 459, GroupLayout.PREFERRED_SIZE)))
 				.addGap(18)
@@ -365,11 +404,16 @@ public class Frame extends JFrame {
 														.addComponent(removeCommandSet, GroupLayout.PREFERRED_SIZE,
 																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 														.addComponent(countSet, GroupLayout.PREFERRED_SIZE,
+																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+														.addComponent(saveInput, GroupLayout.PREFERRED_SIZE,
+																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+														.addComponent(loadSet, GroupLayout.PREFERRED_SIZE,
 																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
 														.addComponent(AddComBtn).addComponent(removeCommandBtn)
-														.addComponent(countSymbolBtn)))
+														.addComponent(countSymbolBtn).addComponent(saveBtn)
+														.addComponent(loadBtn)))
 										.addGroup(gl_contentPane.createSequentialGroup().addGap(31)
 												.addComponent(removeSymbolBtn))
 										.addGroup(gl_contentPane.createSequentialGroup().addGap(31)
@@ -377,6 +421,11 @@ public class Frame extends JFrame {
 								.addGroup(gl_contentPane.createSequentialGroup().addGap(8).addComponent(startBtn)))
 						.addContainerGap()));
 		contentPane.setLayout(gl_contentPane);
+
+		File[] tempmp = getSaveUrls();
+		for (File iterable_element : tempmp) {
+			System.out.println(iterable_element.getPath());
+		}
 	}
 
 	private void addCommand(String state, String data, String nextState, String print, String dir) {
@@ -448,16 +497,26 @@ public class Frame extends JFrame {
 	}
 
 	private void updateSelectors() {
-		printSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(0))));
-		nextStateSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(1))));
-		dataSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(0))));
-		stateSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(1))));
-		removeSymbolSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(0))));
-		removeStateSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(1))));
-		removeCommandSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(2))));
-		startSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(1))));
-		endSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(1))));
-		countSet.setModel(new DefaultComboBoxModel<String>(getTreeContents(getUnder(0))));
+		updateSelNoCha(printSet, 0);
+		updateSelNoCha(nextStateSet, 1);
+		updateSelNoCha(dataSet, 0);
+		updateSelNoCha(stateSet, 1);
+		updateSelNoCha(removeSymbolSet, 0);
+		updateSelNoCha(removeStateSet, 1);
+		updateSelNoCha(removeCommandSet, 2);
+		updateSelNoCha(startSet, 1);
+		updateSelNoCha(endSet, 1);
+		updateSelNoCha(countSet, 0);
+	}
+
+	private void updateSelNoCha(JComboBox<String> e, int dataIndex) {
+		int temp = e.getSelectedIndex();
+		String[] tempArr = getTreeContents(getUnder(dataIndex));
+		e.setModel(new DefaultComboBoxModel<String>(tempArr));
+		if (tempArr.length <= temp || temp == -1)
+			temp = tempArr.length - 1;
+		e.setSelectedIndex(temp);
+
 	}
 
 	private void addSymbol(String sym) {
@@ -502,6 +561,90 @@ public class Frame extends JFrame {
 
 		}
 		output.setText(si + s + "\n");
+	}
+
+	private void printTuringOut(String s) {
+		print(s);
+		String temp = "^";
+		String temp1 = turing.state;
+		for (int i = 0; i < turing.band.index + 1; i++) {
+			temp = " " + temp;
+			temp1 = " " + temp1;
+		}
+		print(temp);
+		print(temp1);
+	}
+
+	private File[] getSaveUrls() {
+		ArrayList<File> temp = new ArrayList<>();
+		File f = new File(System.getProperty("user.dir"));
+		File[] dirs = f.listFiles(e -> e.isDirectory());
+		File[] temp2 = f.listFiles(s -> s.getName().endsWith(".turingSave"));
+		for (File file : temp2) {
+			temp.add(file);
+		}
+		for (File dirdir : dirs) {
+			temp2 = dirdir.listFiles(s -> s.getName().endsWith(".turingSave"));
+			for (File file : temp2) {
+				temp.add(file);
+			}
+		}
+		return temp.toArray(new File[temp.size()]);
+	}
+
+	private void Save() {
+		saveBtn.setText("Save");
+		String name = saveInput.getText();
+		saveInput.setText("");
+		if (name == "") {
+			name = new Date().toString() + "- Turing Save";
+		}
+		String url = System.getProperty("user.dir") + "/" + name + ".turingSave";
+		File f = new File(url);
+		if (!f.exists()) {
+			System.out.println("Exis");
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			saveBtn.setText("Save / Name already exits");
+			return;
+		}
+
+		try {
+			FileWriter myWriter = new FileWriter(f);
+			String Symbols = "";
+			String[] symArr = getTreeContents(getUnder(0));
+			for (String string : symArr) {
+				Symbols = Symbols + "," + string;
+			}
+			Symbols = Symbols.replaceFirst(",", "");
+
+			myWriter.write(Symbols + "\n");
+
+			String States = "";
+			String[] staArr = getTreeContents(getUnder(1));
+			for (String string : staArr) {
+				States = States + "," + string;
+			}
+			States = States.replaceFirst(",", "");
+
+			myWriter.write(States + "\n");
+
+			myWriter.write(startSet.getSelectedItem() + "\n");
+			myWriter.write(endSet.getSelectedItem() + "\n");
+
+			String Comms = turing.CM.toString();
+
+			myWriter.write(Comms);
+			
+			myWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }
