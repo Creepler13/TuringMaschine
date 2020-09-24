@@ -20,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -41,6 +42,8 @@ public class Frame extends JFrame {
 	private JTextField newSymbolInput;
 	private TuringMaschine turing = new TuringMaschine();
 
+	private JScrollPane scroll1;
+	private JScrollPane scroll2;
 	private JButton addStateBtn;
 	private JComboBox<String> printSet;
 	private JComboBox<String> nextStateSet;
@@ -94,6 +97,9 @@ public class Frame extends JFrame {
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
+
+		scroll1 = new JScrollPane();
+		scroll2 = new JScrollPane();
 
 		AddComBtn = new JButton("Add Command");
 		AddComBtn.addActionListener(new ActionListener() {
@@ -223,7 +229,8 @@ public class Frame extends JFrame {
 				turing.setBand(input, getTreeContents(getUnder(0)));
 				turing.setStartEnd((String) startSet.getSelectedItem(), (String) endSet.getSelectedItem());
 				output.setText("");
-				while (!turing.next((int)waitInput.getValue())) {
+				printTuringOut(turing.band.toString());
+				while (!turing.next((int) waitInput.getValue())) {
 					printTuringOut(turing.band.toString());
 				}
 				print("End: " + turing.band.toString());
@@ -283,6 +290,9 @@ public class Frame extends JFrame {
 		waitInput = new JSpinner();
 		waitInput.setEnabled(false);
 
+		scroll1 = new JScrollPane(output);
+		scroll2 = new JScrollPane(tree);
+
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
 				.createSequentialGroup()
@@ -312,10 +322,10 @@ public class Frame extends JFrame {
 										.addComponent(saveInput)
 										.addComponent(saveBtn, GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)))
 						.addGroup(gl_contentPane.createSequentialGroup().addContainerGap()
-								.addComponent(output, GroupLayout.PREFERRED_SIZE, 459, GroupLayout.PREFERRED_SIZE)))
+								.addComponent(scroll1, GroupLayout.PREFERRED_SIZE, 459, GroupLayout.PREFERRED_SIZE)))
 				.addGap(18)
 				.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-						.addComponent(tree, GroupLayout.PREFERRED_SIZE, 389, GroupLayout.PREFERRED_SIZE)
+						.addComponent(scroll2, GroupLayout.PREFERRED_SIZE, 389, GroupLayout.PREFERRED_SIZE)
 						.addGroup(gl_contentPane.createSequentialGroup().addGroup(gl_contentPane
 								.createParallelGroup(Alignment.TRAILING, false)
 								.addComponent(AddComBtn, Alignment.LEADING, GroupLayout.DEFAULT_SIZE,
@@ -360,9 +370,9 @@ public class Frame extends JFrame {
 				.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
 						.createSequentialGroup().addContainerGap()
 						.addGroup(gl_contentPane
-								.createParallelGroup(Alignment.LEADING).addComponent(output, GroupLayout.DEFAULT_SIZE,
+								.createParallelGroup(Alignment.LEADING).addComponent(scroll1, GroupLayout.DEFAULT_SIZE,
 										226, Short.MAX_VALUE)
-								.addComponent(tree, GroupLayout.DEFAULT_SIZE, 226, Short.MAX_VALUE))
+								.addComponent(scroll2, GroupLayout.DEFAULT_SIZE, 226, Short.MAX_VALUE))
 						.addPreferredGap(ComponentPlacement.UNRELATED)
 						.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
 								.createSequentialGroup()
@@ -439,6 +449,7 @@ public class Frame extends JFrame {
 
 		File test = new File(System.getProperty("user.dir") + "/test");
 		test.mkdir();
+
 	}
 
 	private void addCommand(String state, String data, String nextState, String print, String dir) {
@@ -566,28 +577,15 @@ public class Frame extends JFrame {
 	}
 
 	private void print(String s) {
-		String si = output.getText();
-		String[] temp = si.split("\n");
-		if (temp.length == 12) {
-			si = "";
-			for (int i = 1; i < temp.length; i++) {
-				si = si + temp[i] + "\n";
-			}
-
-		}
-		output.setText(si + s + "\n");
+		output.append(s + "\n");
 	}
 
 	private void printTuringOut(String s) {
-		print(s);
-		String temp = "^";
-		String temp1 = turing.state;
-		for (int i = 0; i < turing.band.index + 1; i++) {
-			temp = "  " + temp;
-			temp1 = "  " + temp1;
-		}
-		print(temp);
-		print(temp1);
+
+		String temp = s.substring(0, turing.band.index);
+		String temp1 = s.substring(turing.band.index, s.length() - 1);
+
+		print("state: " + turing.state + " :  " + temp + ">" + turing.band.getData() + "<" + temp1);
 	}
 
 	private File[] getSaveUrls() {
