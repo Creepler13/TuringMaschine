@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import javax.swing.tree.TreePath;
 
 import logic.Command;
 import logic.TuringMaschine;
+import javax.swing.JSpinner;
 
 public class Frame extends JFrame {
 
@@ -64,6 +67,7 @@ public class Frame extends JFrame {
 	private JTextField saveInput;
 	private JButton loadBtn;
 	private JComboBox<String> loadSet;
+	private JSpinner waitInput;
 
 	/**
 	 * Launch the application.
@@ -84,7 +88,7 @@ public class Frame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Frame() {
+	public Frame() throws IOException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 914, 506);
 		contentPane = new JPanel();
@@ -95,9 +99,6 @@ public class Frame extends JFrame {
 		AddComBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (!treeContains(getUnder(2), stateSet.getSelectedItem() + ", " + dataSet.getSelectedItem())) {
-					turing.CM.add(new Command((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem(),
-							(String) nextStateSet.getSelectedItem(), (String) printSet.getSelectedItem(),
-							(String) DirectSet.getSelectedItem()));
 
 					addCommand((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem(),
 							(String) nextStateSet.getSelectedItem(), (String) printSet.getSelectedItem(),
@@ -105,10 +106,6 @@ public class Frame extends JFrame {
 
 				} else {
 					turing.CM.remove((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem());
-
-					turing.CM.add(new Command((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem(),
-							(String) nextStateSet.getSelectedItem(), (String) printSet.getSelectedItem(),
-							(String) DirectSet.getSelectedItem()));
 
 					updateCommand((String) stateSet.getSelectedItem(), (String) dataSet.getSelectedItem(),
 							(String) nextStateSet.getSelectedItem(), (String) printSet.getSelectedItem(),
@@ -160,13 +157,13 @@ public class Frame extends JFrame {
 				DefaultMutableTreeNode node_1;
 				node_1 = new DefaultMutableTreeNode("Symbols");
 				node_1.add(new DefaultMutableTreeNode(" "));
-				this.add(node_1);
+				add(node_1);
 				node_1 = new DefaultMutableTreeNode("States");
 				node_1.add(new DefaultMutableTreeNode("A"));
 				node_1.add(new DefaultMutableTreeNode("END"));
-				this.add(node_1);
+				add(node_1);
 				node_1 = new DefaultMutableTreeNode("Commands");
-				this.add(node_1);
+				add(node_1);
 			}
 		}));
 		tree.setShowsRootHandles(true);
@@ -226,7 +223,7 @@ public class Frame extends JFrame {
 				turing.setBand(input, getTreeContents(getUnder(0)));
 				turing.setStartEnd((String) startSet.getSelectedItem(), (String) endSet.getSelectedItem());
 				output.setText("");
-				while (!turing.next()) {
+				while (!turing.next((int)waitInput.getValue())) {
 					printTuringOut(turing.band.toString());
 				}
 				print("End: " + turing.band.toString());
@@ -274,8 +271,17 @@ public class Frame extends JFrame {
 		saveInput.setColumns(10);
 
 		loadBtn = new JButton("Load");
+		loadBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Load();
+			}
+		});
 
 		loadSet = new JComboBox<String>();
+		loadSet.setModel(new DefaultComboBoxModel<String>(saveUrlsToName(getSaveUrls())));
+
+		waitInput = new JSpinner();
+		waitInput.setEnabled(false);
 
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
@@ -283,25 +289,24 @@ public class Frame extends JFrame {
 				.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
 						.addGroup(gl_contentPane.createSequentialGroup().addGap(77).addGroup(gl_contentPane
 								.createParallelGroup(Alignment.TRAILING, false)
-								.addComponent(
-										startBtn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 								.addComponent(startInput, Alignment.LEADING)
 								.addGroup(gl_contentPane.createSequentialGroup()
 										.addComponent(startSet, GroupLayout.PREFERRED_SIZE, 119,
 												GroupLayout.PREFERRED_SIZE)
 										.addGap(62).addComponent(endSet, GroupLayout.PREFERRED_SIZE, 119,
-												GroupLayout.PREFERRED_SIZE))))
+												GroupLayout.PREFERRED_SIZE))
+								.addGroup(gl_contentPane.createSequentialGroup().addComponent(waitInput)
+										.addPreferredGap(ComponentPlacement.UNRELATED).addComponent(startBtn,
+												GroupLayout.PREFERRED_SIZE, 230, GroupLayout.PREFERRED_SIZE))))
 						.addGroup(gl_contentPane.createSequentialGroup().addContainerGap()
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
 										.addComponent(countSymbolBtn, Alignment.LEADING, GroupLayout.DEFAULT_SIZE,
 												GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 										.addComponent(countSet, Alignment.LEADING, 0, 119, Short.MAX_VALUE))
-								.addPreferredGap(ComponentPlacement.RELATED, 84, Short.MAX_VALUE)
+								.addGap(18)
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-										.addComponent(loadBtn, GroupLayout.PREFERRED_SIZE, 119,
-												GroupLayout.PREFERRED_SIZE)
-										.addComponent(loadSet, GroupLayout.PREFERRED_SIZE, 119,
-												GroupLayout.PREFERRED_SIZE))
+										.addComponent(loadBtn, GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
+										.addComponent(loadSet, 0, 185, Short.MAX_VALUE))
 								.addGap(18)
 								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING, false)
 										.addComponent(saveInput)
@@ -350,10 +355,13 @@ public class Frame extends JFrame {
 										.addComponent(removeCommandBtn, GroupLayout.DEFAULT_SIZE,
 												GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
 				.addContainerGap()));
-		gl_contentPane.setVerticalGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-				.addGroup(gl_contentPane.createSequentialGroup().addContainerGap()
-						.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-								.addComponent(output, GroupLayout.DEFAULT_SIZE, 226, Short.MAX_VALUE)
+		gl_contentPane.setVerticalGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING).addGroup(gl_contentPane
+				.createSequentialGroup()
+				.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
+						.createSequentialGroup().addContainerGap()
+						.addGroup(gl_contentPane
+								.createParallelGroup(Alignment.LEADING).addComponent(output, GroupLayout.DEFAULT_SIZE,
+										226, Short.MAX_VALUE)
 								.addComponent(tree, GroupLayout.DEFAULT_SIZE, 226, Short.MAX_VALUE))
 						.addPreferredGap(ComponentPlacement.UNRELATED)
 						.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
@@ -383,52 +391,59 @@ public class Frame extends JFrame {
 																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addComponent(addStateBtn))))
-						.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
-								.createSequentialGroup().addGap(18)
-								.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_contentPane.createSequentialGroup()
-												.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-														.addComponent(nextStateSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-														.addComponent(removeSymbolSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-														.addComponent(removeStateSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-												.addGap(13)
-												.addComponent(printSet, GroupLayout.PREFERRED_SIZE,
+						.addGap(18)
+						.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+								.addGroup(gl_contentPane.createSequentialGroup()
+										.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+												.addComponent(nextStateSet, GroupLayout.PREFERRED_SIZE,
 														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-														.addComponent(DirectSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-														.addComponent(removeCommandSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-														.addComponent(countSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-														.addComponent(saveInput, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-														.addComponent(loadSet, GroupLayout.PREFERRED_SIZE,
-																GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
-														.addComponent(AddComBtn).addComponent(removeCommandBtn)
-														.addComponent(countSymbolBtn).addComponent(saveBtn)
-														.addComponent(loadBtn)))
-										.addGroup(gl_contentPane.createSequentialGroup().addGap(31)
-												.addComponent(removeSymbolBtn))
-										.addGroup(gl_contentPane.createSequentialGroup().addGap(31)
-												.addComponent(btnRemoveState))))
-								.addGroup(gl_contentPane.createSequentialGroup().addGap(8).addComponent(startBtn)))
-						.addContainerGap()));
+												.addComponent(removeSymbolSet, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+												.addComponent(removeStateSet, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+										.addGap(13)
+										.addComponent(printSet, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+												GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.UNRELATED)
+										.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+												.addComponent(DirectSet, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+												.addComponent(removeCommandSet, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+												.addComponent(countSet, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+												.addComponent(saveInput, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+												.addComponent(loadSet, GroupLayout.PREFERRED_SIZE,
+														GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+										.addPreferredGap(ComponentPlacement.UNRELATED)
+										.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE)
+												.addComponent(AddComBtn).addComponent(removeCommandBtn)
+												.addComponent(countSymbolBtn).addComponent(saveBtn)
+												.addComponent(loadBtn)))
+								.addGroup(
+										gl_contentPane.createSequentialGroup().addGap(31).addComponent(removeSymbolBtn))
+								.addGroup(gl_contentPane.createSequentialGroup().addGap(31)
+										.addComponent(btnRemoveState))))
+						.addGroup(gl_contentPane.createSequentialGroup().addGap(312)
+								.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE).addComponent(startBtn)
+										.addComponent(waitInput, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+												GroupLayout.PREFERRED_SIZE))))
+				.addContainerGap()));
 		contentPane.setLayout(gl_contentPane);
 
 		File[] tempmp = getSaveUrls();
 		for (File iterable_element : tempmp) {
 			System.out.println(iterable_element.getPath());
 		}
+
+		File test = new File(System.getProperty("user.dir") + "/test");
+		test.mkdir();
 	}
 
 	private void addCommand(String state, String data, String nextState, String print, String dir) {
+
+		turing.CM.add(new Command(state, data, nextState, print, dir));
 
 		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
 		DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
@@ -568,8 +583,8 @@ public class Frame extends JFrame {
 		String temp = "^";
 		String temp1 = turing.state;
 		for (int i = 0; i < turing.band.index + 1; i++) {
-			temp = " " + temp;
-			temp1 = " " + temp1;
+			temp = "  " + temp;
+			temp1 = "  " + temp1;
 		}
 		print(temp);
 		print(temp1);
@@ -592,18 +607,29 @@ public class Frame extends JFrame {
 		return temp.toArray(new File[temp.size()]);
 	}
 
+	private String[] saveUrlsToName(File[] files) {
+		String[] temp = new String[files.length];
+		for (int i = 0; i < files.length; i++) {
+			temp[i] = "." + files[i].getPath().substring(System.getProperty("user.dir").length());
+		}
+		return temp;
+	}
+
 	private void Save() {
 		saveBtn.setText("Save");
-		String name = saveInput.getText();
+		String name = saveInput.getText() + "";
 		saveInput.setText("");
-		if (name == "") {
-			name = new Date().toString() + "- Turing Save";
+		System.out.println(name);
+		if (name.equals("")) {
+			name = new Date().toString() + " Turing Save";
+			name = name.replaceAll(":", "_");
 		}
 		String url = System.getProperty("user.dir") + "/" + name + ".turingSave";
 		File f = new File(url);
+		f.getParentFile().mkdirs();
 		if (!f.exists()) {
-			System.out.println("Exis");
 			try {
+
 				f.createNewFile();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -638,13 +664,99 @@ public class Frame extends JFrame {
 
 			String Comms = turing.CM.toString();
 
-			myWriter.write(Comms);
-			
+			myWriter.write(Comms + "$");
+
 			myWriter.close();
+			loadSet.setModel(new DefaultComboBoxModel<String>(saveUrlsToName(getSaveUrls())));
+			loadSet.setSelectedIndex(loadSet.getModel().getSize() - 1);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	private void Load() {
+		String name = loadSet.getSelectedItem() + "";
+		if (name == "") {
+			return;
+		}
+		File f = new File(System.getProperty("user.dir") + "/" + name);
+
+		try {
+			FileReader fr = new FileReader(f);
+			if (fr.ready()) {
+				int red = 0;
+				int next = 0;
+				String buffer = "";
+				String[] temp = null;
+				Boolean onOff = true;
+
+				tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("JTree") {
+					{
+						DefaultMutableTreeNode node_1;
+						node_1 = new DefaultMutableTreeNode("Symbols");
+						add(node_1);
+						node_1 = new DefaultMutableTreeNode("States");
+						add(node_1);
+						node_1 = new DefaultMutableTreeNode("Commands");
+						add(node_1);
+					}
+				}));
+
+				Boolean runThis = (red = fr.read()) != 36;
+				while (runThis) {
+
+					runThis = (red = fr.read()) != 36;
+
+					if (red == 10 || red == 36) {
+						switch (next) {
+						case 0:
+							temp = buffer.split(",");
+							for (String string : temp) {
+								addSymbol(string);
+							}
+							break;
+						case 1:
+							temp = buffer.split(",");
+							for (String string : temp) {
+								addState(string);
+							}
+							break;
+						case 2:
+							startSet.setSelectedItem(buffer);
+							break;
+						case 3:
+							endSet.setSelectedItem(buffer);
+							break;
+						default:
+							System.out.println(buffer);
+							if (onOff) {
+								onOff = false;
+								buffer = buffer + ",";
+							} else {
+								onOff = true;
+								temp = buffer.split(",");
+								addCommand(temp[0], temp[1], temp[2], temp[3], temp[4]);
+							}
+							break;
+						}
+						next++;
+						if (onOff) {
+							buffer = "";
+						}
+					} else {
+						buffer = buffer + (char) red;
+					}
+				}
+				fr.close();
+			}
+		} catch (
+
+		FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

@@ -25,18 +25,32 @@ public class TuringMaschine {
 		this.endState = end;
 	}
 
-	public Boolean next() {
+	private Boolean nextStep() {
 		try {
-			System.out.println(state);
-			state = band.apply(CM.get(state, band.getData()));
 			if (state.equals(endState)) {
 				return true;
 			}
+			state = band.apply(CM.get(state, band.getData()));
 		} catch (Exception e) {
-			System.err.println("Command not Set  "+state+", "+band.getData());
+			System.out.println(state);
+			System.err.println("Command not Set  " + state + ", " + band.getData());
 			return true;
 		}
 		return false;
+	}
+
+	public Boolean next(int wait) {
+		try {
+			Thread.sleep(wait);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return nextStep();
+	}
+
+	public Boolean next() {
+		return nextStep();
 	}
 
 	public ArrayList<String> CleanInput(String input, String[] symbols) {

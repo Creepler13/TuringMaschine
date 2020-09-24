@@ -12,7 +12,12 @@ public class CommandManager {
 
 	public void add(Command com) {
 		if (get(com.state, com.data) == null) {
-			HashMap<String, Command> temp = new HashMap<>();
+			HashMap<String, Command> temp;
+			if (Commands.containsKey(com.state)) {
+				temp = Commands.get(com.state);
+			} else {
+				temp = new HashMap<>();
+			}
 			temp.put(com.data, com);
 			Commands.put(com.state, temp);
 		}
@@ -29,11 +34,12 @@ public class CommandManager {
 			HashMap<String, Command> temp = Commands.get(state);
 			if (temp.containsKey(data)) {
 				return temp.get(data);
+			} else {
+				return null;
 			}
 		} else {
 			return null;
 		}
-		return null;
 	}
 
 	public String toString() {

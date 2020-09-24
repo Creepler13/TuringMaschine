@@ -45,9 +45,12 @@ public class Band {
 		if (index < 0) {
 			index = 0;
 			ArrayList<String> t = new ArrayList<>();
-			t.add("");
+			t.add(" ");
 			t.addAll(Band);
 			Band = t;
+		}
+		if (index > Band.size() - 1) {
+			Band.add(" ");
 		}
 
 		return com.nextState;

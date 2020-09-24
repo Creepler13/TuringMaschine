@@ -1,0 +1,26 @@
+ ,1,0
+a,end,b,c,d,e
+a
+end
+a,1
+a,1,Right
+a,0
+b,0,Right
+b,1
+c,0,Left
+b,0
+b,0,Right
+c,1
+d,1,Right
+c,0
+c,0,Left
+d,0
+a,1,Stay
+d,1
+end,1,Stay
+b,_
+e,_,Left
+e,0
+e,_,Left
+e,1
+end,1,Stay$
